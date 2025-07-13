@@ -1,0 +1,2 @@
+# synapsetradeai
+Taylor Trading Platform
