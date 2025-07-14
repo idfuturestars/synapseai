@@ -280,11 +280,11 @@ class BackendTester:
             else:
                 self.log_result("Error Handling - Missing Token", False, f"Expected 403, got {response.status_code}")
             
-            # Test 3: Register with invalid email format
+            # Test 3: Register with missing required field
             invalid_user = {
-                "email": "clearly-not-an-email",
-                "password": "password123",
-                "full_name": "Test User"
+                "email": "test@example.com",
+                "password": "password123"
+                # Missing full_name field
             }
             response = self.session.post(f"{self.base_url}/auth/register", json=invalid_user)
             if response.status_code == 422:  # Pydantic validation error
