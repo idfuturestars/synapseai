@@ -289,7 +289,7 @@ class BackendTester:
             response = self.session.post(f"{self.base_url}/auth/register", json=invalid_user)
             if response.status_code == 422:  # Pydantic validation error
                 error_tests_passed += 1
-                self.log_result("Error Handling - Invalid Email", True, "Invalid email format correctly rejected")
+                self.log_result("Error Handling - Missing Field", True, "Missing required field correctly rejected")
             else:
                 self.log_result("Error Handling - Invalid Email", False, f"Expected 422, got {response.status_code}")
             
