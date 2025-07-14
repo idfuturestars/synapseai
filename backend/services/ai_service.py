@@ -104,7 +104,7 @@ class AIService:
                 return None
             
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-1.5-pro')  # Updated model name
             logger.info("Gemini client initialized successfully")
             return model
         except Exception as e:
