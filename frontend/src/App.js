@@ -7,6 +7,7 @@ import { useAuth } from './contexts/AuthContext';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Dashboard from './components/dashboard/Dashboard';
+import MarketAnalysis from './components/market/MarketAnalysis';
 import Landing from './components/landing/Landing';
 import './App.css';
 
@@ -61,6 +62,11 @@ function App() {
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/market-analysis" element={
+                <ProtectedRoute>
+                  <MarketAnalysis />
                 </ProtectedRoute>
               } />
             </Routes>
