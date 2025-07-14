@@ -311,6 +311,9 @@ async def oauth_login(oauth_request: OAuthLoginRequest):
             email=email
         )
         
+    except HTTPException as he:
+        # Re-raise HTTP exceptions as-is
+        raise he
     except Exception as e:
         logger.error(f"OAuth login failed: {str(e)}")
         logger.error(f"OAuth error type: {type(e)}")
