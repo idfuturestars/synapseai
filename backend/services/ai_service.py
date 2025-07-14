@@ -364,7 +364,7 @@ class AIService:
             },
             "gemini": {
                 "status": "active" if self.gemini_client else "inactive",
-                "model": "gemini-pro",
+                "model": "gemini-1.5-pro",
                 "capabilities": ["strategy_generation", "market_prediction"]
             },
             "orchestration": {
