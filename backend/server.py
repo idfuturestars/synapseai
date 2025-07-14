@@ -248,6 +248,9 @@ async def login_user(user_login: UserLogin):
             email=user["email"]
         )
         
+    except HTTPException as he:
+        # Re-raise HTTP exceptions as-is
+        raise he
     except Exception as e:
         logger.error(f"Login failed: {str(e)}")
         logger.error(f"Login error type: {type(e)}")
