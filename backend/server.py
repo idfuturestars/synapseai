@@ -100,6 +100,23 @@ class UserProfile(BaseModel):
     created_at: datetime
     last_login: datetime
 
+class MarketDataRequest(BaseModel):
+    symbol: str
+    timeframe: Optional[str] = "1h"
+
+class AIAnalysisRequest(BaseModel):
+    symbol: str
+    analysis_type: Optional[str] = "comprehensive"
+    include_risk_assessment: Optional[bool] = True
+    include_strategy: Optional[bool] = True
+
+class TradingStrategyRequest(BaseModel):
+    user_id: str
+    strategy_name: str
+    strategy_type: str
+    parameters: Dict[str, Any]
+    risk_level: str
+
 # Helper functions
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
