@@ -371,5 +371,213 @@ async def get_user_stats(current_user: dict = Depends(get_current_user)):
         "account_status": "active"
     }
 
+# AI and Market Data Endpoints
+@app.get("/api/ai/status")
+async def get_ai_status():
+    """Get AI system status"""
+    try:
+        status = await ai_service.get_ai_system_status()
+        return {
+            "status": "success",
+            "timestamp": datetime.utcnow().isoformat(),
+            "ai_systems": status
+        }
+    except Exception as e:
+        logger.error(f"Failed to get AI status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get AI status")
+
+@app.post("/api/market/data")
+async def get_market_data(request: MarketDataRequest):
+    """Get market data for a symbol"""
+    try:
+        market_data = await market_data_service.get_market_data(request.symbol, request.timeframe)
+        return {
+            "status": "success",
+            "data": market_data
+        }
+    except Exception as e:
+        logger.error(f"Failed to get market data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get market data")
+
+@app.get("/api/market/overview")
+async def get_market_overview():
+    """Get market overview"""
+    try:
+        overview = await market_data_service.get_market_overview()
+        return {
+            "status": "success",
+            "data": overview
+        }
+    except Exception as e:
+        logger.error(f"Failed to get market overview: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get market overview")
+
+@app.get("/api/market/trending/{market_type}")
+async def get_trending_symbols(market_type: str):
+    """Get trending symbols for a market type"""
+    try:
+        symbols = await market_data_service.get_trending_symbols(market_type)
+        return {
+            "status": "success",
+            "market_type": market_type,
+            "trending_symbols": symbols
+        }
+    except Exception as e:
+        logger.error(f"Failed to get trending symbols: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get trending symbols")
+
+@app.post("/api/ai/analyze")
+async def analyze_symbol(request: AIAnalysisRequest, current_user: dict = Depends(get_current_user)):
+    """Analyze a symbol using AI"""
+    try:
+        # Get market data first
+        market_data = await market_data_service.get_market_data(request.symbol)
+        
+        if market_data["status"] != "success":
+            raise HTTPException(status_code=400, detail="Failed to fetch market data")
+        
+        # Perform AI analysis
+        analysis = await ai_service.orchestrate_analysis(request.symbol, market_data["data"]["data"])
+        
+        # Store analysis in database
+        analysis_doc = {
+            "user_id": current_user["user_id"],
+            "symbol": request.symbol,
+            "analysis_type": request.analysis_type,
+            "analysis_data": analysis,
+            "timestamp": datetime.utcnow(),
+            "status": "completed"
+        }
+        
+        db.analyses.insert_one(analysis_doc)
+        
+        return {
+            "status": "success",
+            "analysis": analysis
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to analyze symbol: {e}")
+        raise HTTPException(status_code=500, detail="Failed to analyze symbol")
+
+@app.post("/api/trading/strategy")
+async def create_trading_strategy(request: TradingStrategyRequest, current_user: dict = Depends(get_current_user)):
+    """Create a new trading strategy"""
+    try:
+        # Generate strategy using AI
+        market_conditions = {
+            "risk_level": request.risk_level,
+            "strategy_type": request.strategy_type,
+            "parameters": request.parameters
+        }
+        
+        strategy = await ai_service.generate_strategy_gemini(market_conditions)
+        
+        if not strategy:
+            raise HTTPException(status_code=500, detail="Failed to generate strategy")
+        
+        # Save strategy to database
+        strategy_doc = {
+            "user_id": current_user["user_id"],
+            "strategy_name": request.strategy_name,
+            "strategy_type": request.strategy_type,
+            "parameters": request.parameters,
+            "ai_generated_strategy": strategy.__dict__,
+            "status": "active",
+            "created_at": datetime.utcnow(),
+            "last_updated": datetime.utcnow()
+        }
+        
+        strategies_collection.insert_one(strategy_doc)
+        
+        return {
+            "status": "success",
+            "strategy": strategy.__dict__,
+            "message": "Trading strategy created successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to create trading strategy: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create trading strategy")
+
+@app.get("/api/trading/strategies")
+async def get_user_strategies(current_user: dict = Depends(get_current_user)):
+    """Get user's trading strategies"""
+    try:
+        strategies = list(strategies_collection.find(
+            {"user_id": current_user["user_id"]},
+            {"_id": 0}
+        ))
+        
+        return {
+            "status": "success",
+            "strategies": strategies,
+            "total_strategies": len(strategies)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get user strategies: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get user strategies")
+
+@app.post("/api/ai/risk-assessment")
+async def assess_trading_risk(trading_data: Dict[str, Any], current_user: dict = Depends(get_current_user)):
+    """Assess trading risk using AI"""
+    try:
+        risk_assessment = await ai_service.assess_risk_claude(trading_data)
+        
+        if not risk_assessment:
+            raise HTTPException(status_code=500, detail="Failed to assess risk")
+        
+        # Store risk assessment
+        risk_doc = {
+            "user_id": current_user["user_id"],
+            "trading_data": trading_data,
+            "risk_assessment": risk_assessment.__dict__,
+            "timestamp": datetime.utcnow()
+        }
+        
+        db.risk_assessments.insert_one(risk_doc)
+        
+        return {
+            "status": "success",
+            "risk_assessment": risk_assessment.__dict__
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to assess trading risk: {e}")
+        raise HTTPException(status_code=500, detail="Failed to assess trading risk")
+
+@app.get("/api/dashboard/data")
+async def get_dashboard_data(current_user: dict = Depends(get_current_user)):
+    """Get comprehensive dashboard data"""
+    try:
+        # Get user stats
+        user_stats = await get_user_stats(current_user)
+        
+        # Get AI system status
+        ai_status = await ai_service.get_ai_system_status()
+        
+        # Get market overview
+        market_overview = await market_data_service.get_market_overview()
+        
+        # Get user's recent analyses
+        recent_analyses = list(db.analyses.find(
+            {"user_id": current_user["user_id"]},
+            {"_id": 0}
+        ).sort("timestamp", -1).limit(5))
+        
+        return {
+            "status": "success",
+            "user_stats": user_stats,
+            "ai_status": ai_status,
+            "market_overview": market_overview,
+            "recent_analyses": recent_analyses,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get dashboard data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get dashboard data")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
