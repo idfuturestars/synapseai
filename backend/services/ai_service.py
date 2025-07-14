@@ -66,7 +66,7 @@ class AIService:
         try:
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
-                logger.error("OpenAI API key not found")
+                logger.warning("OpenAI API key not found - OpenAI services will be disabled")
                 return None
             
             client = openai.OpenAI(api_key=api_key)
@@ -81,7 +81,7 @@ class AIService:
         try:
             api_key = os.getenv("CLAUDE_API_KEY")
             if not api_key:
-                logger.error("Claude API key not found")
+                logger.warning("Claude API key not found - Claude services will be disabled")
                 return None
             
             client = anthropic.Anthropic(api_key=api_key)
@@ -96,7 +96,7 @@ class AIService:
         try:
             api_key = os.getenv("GEMINI_API_KEY")
             if not api_key:
-                logger.error("Gemini API key not found")
+                logger.warning("Gemini API key not found - Gemini services will be disabled")
                 return None
             
             genai.configure(api_key=api_key)
