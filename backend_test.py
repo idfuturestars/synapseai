@@ -291,7 +291,7 @@ class BackendTester:
                 error_tests_passed += 1
                 self.log_result("Error Handling - Missing Field", True, "Missing required field correctly rejected")
             else:
-                self.log_result("Error Handling - Invalid Email", False, f"Expected 422, got {response.status_code}")
+                self.log_result("Error Handling - Missing Field", False, f"Expected 422, got {response.status_code}")
             
             # Overall error handling result
             if error_tests_passed == total_error_tests:
