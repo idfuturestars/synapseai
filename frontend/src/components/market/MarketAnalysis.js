@@ -126,7 +126,13 @@ const MarketAnalysis = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">AI Market Analysis</h1>
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold text-white">SynapseTrade AI™</h1>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">AI Market Analysis</h2>
           <p className="text-gray-300">Advanced market intelligence powered by multi-AI systems</p>
         </div>
 

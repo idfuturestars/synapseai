@@ -1,7 +1,20 @@
 {
   "name": "synapsetrade-ai-frontend",
   "version": "1.0.0",
+  "description": "SynapseTrade AI™ - Autonomous Trading Platform Frontend",
+  "author": "SynapseTrade AI™",
+  "license": "Proprietary",
   "private": true,
+  "homepage": "https://synapsetrade.ai",
+  "keywords": [
+    "trading",
+    "ai",
+    "autonomous",
+    "blockchain",
+    "fintech",
+    "market-analysis",
+    "risk-management"
+  ],
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",
