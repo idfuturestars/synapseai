@@ -267,7 +267,7 @@ class AIService:
         """Generate trading strategy using Gemini"""
         if not self.gemini_client:
             logger.error("Gemini client not available")
-            return None
+            return self._generate_fallback_strategy(market_conditions)
         
         try:
             prompt = f"""
@@ -323,7 +323,28 @@ class AIService:
             
         except Exception as e:
             logger.error(f"Gemini strategy generation failed: {e}")
-            return None
+            return self._generate_fallback_strategy(market_conditions)
+    
+    def _generate_fallback_strategy(self, market_conditions: Dict[str, Any]) -> TradingStrategy:
+        """Generate fallback strategy when AI service is unavailable"""
+        strategy_type = market_conditions.get("strategy_type", "momentum")
+        risk_level = market_conditions.get("risk_level", "medium")
+        
+        return TradingStrategy(
+            strategy_name=f"Fallback {strategy_type.title()} Strategy",
+            strategy_type=strategy_type,
+            entry_signals=["Technical indicator crossover", "Volume confirmation"],
+            exit_signals=["Profit target reached", "Stop loss triggered"],
+            risk_management={
+                "stop_loss": 0.02 if risk_level == "low" else 0.03,
+                "take_profit": 0.04 if risk_level == "low" else 0.06,
+                "position_size": 0.05 if risk_level == "low" else 0.1
+            },
+            expected_return=0.08 if risk_level == "low" else 0.15,
+            risk_level=risk_level,
+            timestamp=datetime.utcnow(),
+            ai_provider="fallback"
+        )
     
     async def orchestrate_analysis(self, symbol: str, market_data: Dict[str, Any]) -> Dict[str, Any]:
         """Orchestrate multi-AI analysis"""
