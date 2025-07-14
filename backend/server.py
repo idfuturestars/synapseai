@@ -246,7 +246,10 @@ async def login_user(user_login: UserLogin):
         )
         
     except Exception as e:
-        logger.error(f"Login failed: {e}")
+        logger.error(f"Login failed: {str(e)}")
+        logger.error(f"Login error type: {type(e)}")
+        import traceback
+        logger.error(f"Login traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Login failed")
 
 @app.post("/api/auth/oauth", response_model=Token)
