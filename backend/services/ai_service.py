@@ -215,16 +215,26 @@ class AIService:
             Provide your assessment in a structured format.
             """
             
-            message = self.claude_client.messages.create(
-                model="claude-3-sonnet-20240229",
-                max_tokens=1500,
-                temperature=0.2,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            
-            response_text = message.content[0].text
+            # Try the new API format first, fall back to older format if needed
+            try:
+                message = self.claude_client.messages.create(
+                    model="claude-3-sonnet-20240229",
+                    max_tokens=1500,
+                    temperature=0.2,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                response_text = message.content[0].text
+            except AttributeError:
+                # Fallback for older API versions
+                response = self.claude_client.completions.create(
+                    model="claude-2",
+                    prompt=f"Human: {prompt}\n\nAssistant:",
+                    max_tokens_to_sample=1500,
+                    temperature=0.2
+                )
+                response_text = response.completion
             
             # Extract risk information from response
             risk_level = "medium"
