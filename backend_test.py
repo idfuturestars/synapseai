@@ -644,7 +644,7 @@ class BackendTester:
         print(f"📍 Backend URL: {self.base_url}")
         print("=" * 60)
         
-        # Test sequence
+        # Test sequence - Basic auth tests first, then AI/market data tests
         tests = [
             ("Health Check", self.test_health_check),
             ("User Registration", self.test_user_registration),
@@ -653,7 +653,17 @@ class BackendTester:
             ("User Profile", self.test_user_profile),
             ("User Stats", self.test_user_stats),
             ("OAuth Endpoint Structure", self.test_oauth_endpoint_structure),
-            ("Error Handling", self.test_error_handling)
+            ("Error Handling", self.test_error_handling),
+            # NEW AI AND MARKET DATA TESTS
+            ("AI Status", self.test_ai_status),
+            ("Market Data", self.test_market_data),
+            ("Market Overview", self.test_market_overview),
+            ("Trending Symbols", self.test_trending_symbols),
+            ("AI Analysis", self.test_ai_analyze),
+            ("Trading Strategy Creation", self.test_trading_strategy_creation),
+            ("User Strategies", self.test_user_strategies),
+            ("Risk Assessment", self.test_risk_assessment),
+            ("Dashboard Data", self.test_dashboard_data)
         ]
         
         passed_tests = 0
