@@ -306,7 +306,10 @@ async def oauth_login(oauth_request: OAuthLoginRequest):
         )
         
     except Exception as e:
-        logger.error(f"OAuth login failed: {e}")
+        logger.error(f"OAuth login failed: {str(e)}")
+        logger.error(f"OAuth error type: {type(e)}")
+        import traceback
+        logger.error(f"OAuth traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="OAuth login failed")
 
 @app.get("/api/user/profile", response_model=UserProfile)
