@@ -437,7 +437,7 @@ async def analyze_symbol(request: AIAnalysisRequest, current_user: dict = Depend
             raise HTTPException(status_code=400, detail="Failed to fetch market data")
         
         # Perform AI analysis
-        analysis = await ai_service.orchestrate_analysis(request.symbol, market_data["data"]["data"])
+        analysis = await ai_service.orchestrate_analysis(request.symbol, market_data["data"])
         
         # Store analysis in database
         analysis_doc = {
