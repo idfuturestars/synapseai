@@ -4,6 +4,7 @@ Integrates OpenAI, Claude, and Gemini APIs for market analysis and trading intel
 """
 
 import os
+from dotenv import load_dotenv
 import json
 import asyncio
 from typing import Dict, List, Optional, Any
@@ -14,6 +15,9 @@ import openai
 import anthropic
 import google.generativeai as genai
 import httpx
+
+# Load environment variables
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
