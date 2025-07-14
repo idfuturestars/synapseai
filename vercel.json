@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "name": "synapsetrade-ai-frontend",
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://synapsetrade-ai-backend.railway.app/api/$1"
+    }
+  ],
+  "env": {
+    "REACT_APP_BACKEND_URL": "https://synapsetrade-ai-backend.railway.app",
+    "REACT_APP_GOOGLE_CLIENT_ID": "826981107429-bfninoa6irpb4ptomn0m637hphoh2t83.apps.googleusercontent.com",
+    "REACT_APP_GITHUB_CLIENT_ID": "Ov23lisfYEmX0dRrr8wN"
+  },
+  "functions": {
+    "frontend/src/**/*.js": {
+      "maxDuration": 30
+    }
+  }
+}
