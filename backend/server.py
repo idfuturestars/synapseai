@@ -212,7 +212,10 @@ async def register_user(user: UserCreate):
         )
         
     except Exception as e:
-        logger.error(f"Registration failed: {e}")
+        logger.error(f"Registration failed: {str(e)}")
+        logger.error(f"Registration error type: {type(e)}")
+        import traceback
+        logger.error(f"Registration traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Registration failed")
 
 @app.post("/api/auth/login", response_model=Token)
