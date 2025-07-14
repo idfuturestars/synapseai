@@ -190,7 +190,7 @@ class AIService:
         """Assess risk using Claude"""
         if not self.claude_client:
             logger.error("Claude client not available")
-            return None
+            return self._generate_fallback_risk_assessment(trading_data)
         
         try:
             prompt = f"""
@@ -261,7 +261,38 @@ class AIService:
             
         except Exception as e:
             logger.error(f"Claude risk assessment failed: {e}")
-            return None
+            return self._generate_fallback_risk_assessment(trading_data)
+    
+    def _generate_fallback_risk_assessment(self, trading_data: Dict[str, Any]) -> RiskAssessment:
+        """Generate fallback risk assessment when AI service is unavailable"""
+        symbol = trading_data.get("symbol", "UNKNOWN")
+        position_size = trading_data.get("position_size", 0.1)
+        leverage = trading_data.get("leverage", 1.0)
+        
+        # Simple risk calculation based on position size and leverage
+        base_risk_score = min(position_size * leverage * 100, 100)
+        
+        if base_risk_score < 30:
+            risk_level = "low"
+            risk_factors = ["Minimal position exposure", "Conservative leverage"]
+            mitigation_strategies = ["Maintain current position sizing", "Monitor market conditions"]
+        elif base_risk_score < 60:
+            risk_level = "medium"
+            risk_factors = ["Moderate position exposure", "Standard market volatility"]
+            mitigation_strategies = ["Implement stop losses", "Diversify positions"]
+        else:
+            risk_level = "high"
+            risk_factors = ["High position exposure", "Elevated leverage risk"]
+            mitigation_strategies = ["Reduce position size", "Implement strict stop losses", "Monitor closely"]
+        
+        return RiskAssessment(
+            risk_level=risk_level,
+            risk_score=base_risk_score,
+            risk_factors=risk_factors,
+            mitigation_strategies=mitigation_strategies,
+            timestamp=datetime.utcnow(),
+            ai_provider="fallback"
+        )
     
     async def generate_strategy_gemini(self, market_conditions: Dict[str, Any]) -> Optional[TradingStrategy]:
         """Generate trading strategy using Gemini"""
