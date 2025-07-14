@@ -1,0 +1,219 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:5.0
+    container_name: synapsetrade-ai-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: synapse-mongo-2025
+      MONGO_INITDB_DATABASE: synapsetrade
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - synapsetrade-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: synapsetrade-ai-backend
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - MONGO_URL=mongodb://admin:synapse-mongo-2025@mongodb:27017/synapsetrade?authSource=admin
+      - OPENAI_API_KEY=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
+      - CLAUDE_API_KEY=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
+      - GEMINI_API_KEY=AIzaSyDnz6Z8p5sM-u37qhot44XtlpU4mJydnzw
+      - GOOGLE_CLIENT_ID=826981107429-bfninoa6irpb4ptomn0m637hphoh2t83.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=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
+      - GITHUB_CLIENT_ID=Ov23lisfYEmX0dRrr8wN
+      - GITHUB_CLIENT_SECRET=51e923120bc2be0258a5b4c10afe550b822beac7
+      - JWT_SECRET_KEY=synapse-trade-ai-jwt-secret-key-2025
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRATION_TIME=1440
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend:/app
+      - backend_logs:/app/logs
+    networks:
+      - synapsetrade-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Frontend Application
+  frontend:
+    build: ./frontend
+    container_name: synapsetrade-ai-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8001
+      - REACT_APP_GOOGLE_CLIENT_ID=826981107429-bfninoa6irpb4ptomn0m637hphoh2t83.apps.googleusercontent.com
+      - REACT_APP_GITHUB_CLIENT_ID=Ov23lisfYEmX0dRrr8wN
+    ports:
+      - "3000:80"
+    networks:
+      - synapsetrade-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Redis for Caching (Optional)
+  redis:
+    image: redis:7-alpine
+    container_name: synapsetrade-ai-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - synapsetrade-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: synapsetrade-ai-nginx
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - synapsetrade-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: synapsetrade-ai-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - synapsetrade-network
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: synapsetrade-ai-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=synapse-grafana-2025
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - synapsetrade-network
+
+  # Log Management - ELK Stack
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    container_name: synapsetrade-ai-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - synapsetrade-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.15.0
+    container_name: synapsetrade-ai-logstash
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    networks:
+      - synapsetrade-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.15.0
+    container_name: synapsetrade-ai-kibana
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - synapsetrade-network
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+networks:
+  synapsetrade-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
