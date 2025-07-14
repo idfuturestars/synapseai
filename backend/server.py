@@ -15,6 +15,8 @@ from pymongo import MongoClient
 import uuid
 import requests
 import httpx
+from services.ai_service import ai_service
+from services.market_data_service import market_data_service
 
 # Load environment variables
 load_dotenv()
