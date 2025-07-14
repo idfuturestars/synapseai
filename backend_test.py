@@ -282,7 +282,7 @@ class BackendTester:
             
             # Test 3: Register with invalid email format
             invalid_user = {
-                "email": "invalid-email-format",
+                "email": "clearly-not-an-email",
                 "password": "password123",
                 "full_name": "Test User"
             }
