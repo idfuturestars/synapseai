@@ -304,6 +304,339 @@ class BackendTester:
         except Exception as e:
             self.log_result("Error Handling", False, f"Error handling tests failed with exception: {str(e)}")
             return False
+
+    # NEW AI AND MARKET DATA ENDPOINT TESTS
+    
+    def test_ai_status(self):
+        """Test /api/ai/status endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/ai/status")
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ['status', 'timestamp', 'ai_systems']
+                
+                if all(field in data for field in required_fields):
+                    ai_systems = data['ai_systems']
+                    if 'openai' in ai_systems and 'claude' in ai_systems and 'gemini' in ai_systems:
+                        self.log_result("AI Status", True, "AI status endpoint working correctly", {
+                            'openai_status': ai_systems['openai']['status'],
+                            'claude_status': ai_systems['claude']['status'],
+                            'gemini_status': ai_systems['gemini']['status']
+                        })
+                        return True
+                    else:
+                        self.log_result("AI Status", False, "AI systems data incomplete", data)
+                        return False
+                else:
+                    missing_fields = [field for field in required_fields if field not in data]
+                    self.log_result("AI Status", False, f"AI status response missing fields: {missing_fields}", data)
+                    return False
+            else:
+                self.log_result("AI Status", False, f"AI status endpoint failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_result("AI Status", False, f"AI status endpoint failed with exception: {str(e)}")
+            return False
+    
+    def test_market_data(self):
+        """Test /api/market/data endpoint"""
+        try:
+            market_request = {
+                "symbol": "BTC",
+                "timeframe": "1h"
+            }
+            
+            response = self.session.post(f"{self.base_url}/market/data", json=market_request)
+            if response.status_code == 200:
+                data = response.json()
+                if 'status' in data and data['status'] == 'success' and 'data' in data:
+                    market_data = data['data']
+                    required_fields = ['symbol', 'timeframe', 'data']
+                    
+                    if all(field in market_data for field in required_fields):
+                        self.log_result("Market Data", True, "Market data endpoint working correctly", {
+                            'symbol': market_data['symbol'],
+                            'timeframe': market_data['timeframe'],
+                            'current_price': market_data['data'].get('current_price')
+                        })
+                        return True
+                    else:
+                        self.log_result("Market Data", False, "Market data response incomplete", data)
+                        return False
+                else:
+                    self.log_result("Market Data", False, "Market data response format invalid", data)
+                    return False
+            else:
+                self.log_result("Market Data", False, f"Market data endpoint failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_result("Market Data", False, f"Market data endpoint failed with exception: {str(e)}")
+            return False
+    
+    def test_market_overview(self):
+        """Test /api/market/overview endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/market/overview")
+            if response.status_code == 200:
+                data = response.json()
+                if 'status' in data and data['status'] == 'success' and 'data' in data:
+                    overview_data = data['data']
+                    required_fields = ['timestamp', 'market_sentiment', 'total_volume']
+                    
+                    if all(field in overview_data for field in required_fields):
+                        self.log_result("Market Overview", True, "Market overview endpoint working correctly", {
+                            'market_sentiment': overview_data['market_sentiment'],
+                            'total_volume': overview_data['total_volume'],
+                            'positive_symbols': overview_data.get('positive_symbols', 0)
+                        })
+                        return True
+                    else:
+                        self.log_result("Market Overview", False, "Market overview response incomplete", data)
+                        return False
+                else:
+                    self.log_result("Market Overview", False, "Market overview response format invalid", data)
+                    return False
+            else:
+                self.log_result("Market Overview", False, f"Market overview endpoint failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_result("Market Overview", False, f"Market overview endpoint failed with exception: {str(e)}")
+            return False
+    
+    def test_trending_symbols(self):
+        """Test /api/market/trending/{market_type} endpoint"""
+        try:
+            market_types = ["crypto", "stocks", "forex"]
+            all_tests_passed = True
+            
+            for market_type in market_types:
+                response = self.session.get(f"{self.base_url}/market/trending/{market_type}")
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'status' in data and data['status'] == 'success' and 'trending_symbols' in data:
+                        symbols = data['trending_symbols']
+                        if isinstance(symbols, list) and len(symbols) > 0:
+                            self.log_result(f"Trending Symbols - {market_type}", True, f"Trending symbols for {market_type} working correctly", {
+                                'market_type': market_type,
+                                'symbol_count': len(symbols),
+                                'sample_symbols': symbols[:3]
+                            })
+                        else:
+                            self.log_result(f"Trending Symbols - {market_type}", False, f"No trending symbols returned for {market_type}", data)
+                            all_tests_passed = False
+                    else:
+                        self.log_result(f"Trending Symbols - {market_type}", False, f"Invalid response format for {market_type}", data)
+                        all_tests_passed = False
+                else:
+                    self.log_result(f"Trending Symbols - {market_type}", False, f"Trending symbols endpoint failed for {market_type} with status {response.status_code}", response.text)
+                    all_tests_passed = False
+            
+            return all_tests_passed
+        except Exception as e:
+            self.log_result("Trending Symbols", False, f"Trending symbols endpoint failed with exception: {str(e)}")
+            return False
+    
+    def test_ai_analyze(self):
+        """Test /api/ai/analyze endpoint (requires auth)"""
+        if not self.auth_token:
+            self.log_result("AI Analysis", False, "No auth token available for testing")
+            return False
+        
+        try:
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            analysis_request = {
+                "symbol": "BTC",
+                "analysis_type": "comprehensive",
+                "include_risk_assessment": True,
+                "include_strategy": True
+            }
+            
+            response = self.session.post(f"{self.base_url}/ai/analyze", json=analysis_request, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if 'status' in data and data['status'] == 'success' and 'analysis' in data:
+                    analysis = data['analysis']
+                    required_fields = ['symbol', 'timestamp', 'orchestration_status']
+                    
+                    if all(field in analysis for field in required_fields):
+                        self.log_result("AI Analysis", True, "AI analysis endpoint working correctly", {
+                            'symbol': analysis['symbol'],
+                            'orchestration_status': analysis['orchestration_status'],
+                            'has_market_analysis': analysis.get('market_analysis') is not None,
+                            'has_risk_assessment': analysis.get('risk_assessment') is not None
+                        })
+                        return True
+                    else:
+                        self.log_result("AI Analysis", False, "AI analysis response incomplete", data)
+                        return False
+                else:
+                    self.log_result("AI Analysis", False, "AI analysis response format invalid", data)
+                    return False
+            else:
+                self.log_result("AI Analysis", False, f"AI analysis endpoint failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_result("AI Analysis", False, f"AI analysis endpoint failed with exception: {str(e)}")
+            return False
+    
+    def test_trading_strategy_creation(self):
+        """Test /api/trading/strategy endpoint (requires auth)"""
+        if not self.auth_token:
+            self.log_result("Trading Strategy Creation", False, "No auth token available for testing")
+            return False
+        
+        try:
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            strategy_request = {
+                "user_id": "test_user_id",
+                "strategy_name": "AI Momentum Strategy",
+                "strategy_type": "momentum",
+                "parameters": {
+                    "timeframe": "1h",
+                    "risk_level": "medium",
+                    "max_position_size": 0.1
+                },
+                "risk_level": "medium"
+            }
+            
+            response = self.session.post(f"{self.base_url}/trading/strategy", json=strategy_request, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if 'status' in data and data['status'] == 'success' and 'strategy' in data:
+                    strategy = data['strategy']
+                    required_fields = ['strategy_name', 'strategy_type', 'timestamp']
+                    
+                    if all(field in strategy for field in required_fields):
+                        self.log_result("Trading Strategy Creation", True, "Trading strategy creation working correctly", {
+                            'strategy_name': strategy['strategy_name'],
+                            'strategy_type': strategy['strategy_type'],
+                            'ai_provider': strategy.get('ai_provider')
+                        })
+                        return True
+                    else:
+                        self.log_result("Trading Strategy Creation", False, "Trading strategy response incomplete", data)
+                        return False
+                else:
+                    self.log_result("Trading Strategy Creation", False, "Trading strategy response format invalid", data)
+                    return False
+            else:
+                self.log_result("Trading Strategy Creation", False, f"Trading strategy endpoint failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_result("Trading Strategy Creation", False, f"Trading strategy endpoint failed with exception: {str(e)}")
+            return False
+    
+    def test_user_strategies(self):
+        """Test /api/trading/strategies endpoint (requires auth)"""
+        if not self.auth_token:
+            self.log_result("User Strategies", False, "No auth token available for testing")
+            return False
+        
+        try:
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = self.session.get(f"{self.base_url}/trading/strategies", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'status' in data and data['status'] == 'success' and 'strategies' in data:
+                    strategies = data['strategies']
+                    total_strategies = data.get('total_strategies', 0)
+                    
+                    self.log_result("User Strategies", True, "User strategies endpoint working correctly", {
+                        'total_strategies': total_strategies,
+                        'strategies_count': len(strategies)
+                    })
+                    return True
+                else:
+                    self.log_result("User Strategies", False, "User strategies response format invalid", data)
+                    return False
+            else:
+                self.log_result("User Strategies", False, f"User strategies endpoint failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_result("User Strategies", False, f"User strategies endpoint failed with exception: {str(e)}")
+            return False
+    
+    def test_risk_assessment(self):
+        """Test /api/ai/risk-assessment endpoint (requires auth)"""
+        if not self.auth_token:
+            self.log_result("Risk Assessment", False, "No auth token available for testing")
+            return False
+        
+        try:
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            trading_data = {
+                "symbol": "BTC",
+                "position_size": 0.1,
+                "leverage": 1.0,
+                "stop_loss": 0.02,
+                "take_profit": 0.05,
+                "market_conditions": "volatile"
+            }
+            
+            response = self.session.post(f"{self.base_url}/ai/risk-assessment", json=trading_data, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                if 'status' in data and data['status'] == 'success' and 'risk_assessment' in data:
+                    risk_assessment = data['risk_assessment']
+                    required_fields = ['risk_level', 'risk_score', 'timestamp']
+                    
+                    if all(field in risk_assessment for field in required_fields):
+                        self.log_result("Risk Assessment", True, "Risk assessment endpoint working correctly", {
+                            'risk_level': risk_assessment['risk_level'],
+                            'risk_score': risk_assessment['risk_score'],
+                            'ai_provider': risk_assessment.get('ai_provider')
+                        })
+                        return True
+                    else:
+                        self.log_result("Risk Assessment", False, "Risk assessment response incomplete", data)
+                        return False
+                else:
+                    self.log_result("Risk Assessment", False, "Risk assessment response format invalid", data)
+                    return False
+            else:
+                self.log_result("Risk Assessment", False, f"Risk assessment endpoint failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_result("Risk Assessment", False, f"Risk assessment endpoint failed with exception: {str(e)}")
+            return False
+    
+    def test_dashboard_data(self):
+        """Test /api/dashboard/data endpoint (requires auth)"""
+        if not self.auth_token:
+            self.log_result("Dashboard Data", False, "No auth token available for testing")
+            return False
+        
+        try:
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = self.session.get(f"{self.base_url}/dashboard/data", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'status' in data and data['status'] == 'success':
+                    required_fields = ['user_stats', 'ai_status', 'market_overview', 'recent_analyses', 'timestamp']
+                    
+                    if all(field in data for field in required_fields):
+                        self.log_result("Dashboard Data", True, "Dashboard data endpoint working correctly", {
+                            'has_user_stats': data.get('user_stats') is not None,
+                            'has_ai_status': data.get('ai_status') is not None,
+                            'has_market_overview': data.get('market_overview') is not None,
+                            'recent_analyses_count': len(data.get('recent_analyses', []))
+                        })
+                        return True
+                    else:
+                        missing_fields = [field for field in required_fields if field not in data]
+                        self.log_result("Dashboard Data", False, f"Dashboard data response missing fields: {missing_fields}", data)
+                        return False
+                else:
+                    self.log_result("Dashboard Data", False, "Dashboard data response format invalid", data)
+                    return False
+            else:
+                self.log_result("Dashboard Data", False, f"Dashboard data endpoint failed with status {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_result("Dashboard Data", False, f"Dashboard data endpoint failed with exception: {str(e)}")
+            return False
     
     def run_all_tests(self):
         """Run all backend tests"""
