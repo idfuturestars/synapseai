@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { 
+  Zap, 
   TrendingUp, 
-  BarChart3, 
   Brain, 
-  Activity,
-  Search,
   RefreshCw,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Zap
+  ArrowLeft,
+  Activity,
+  Shield
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const MarketAnalysis = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [selectedSymbol, setSelectedSymbol] = useState('BTC');
   const [marketData, setMarketData] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState(null);
@@ -102,87 +104,129 @@ const MarketAnalysis = () => {
   const getAIStatusIcon = (status) => {
     switch (status) {
       case 'active':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'inactive':
-        return <XCircle className="w-4 h-4 text-red-500" />;
+        return <XCircle className="w-4 h-4 text-red-600" />;
       default:
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+        return <AlertTriangle className="w-4 h-4 text-gray-400" />;
     }
   };
 
   const getSentimentColor = (sentiment) => {
     switch (sentiment) {
       case 'bullish':
-        return 'text-green-400';
+        return 'text-green-600';
       case 'bearish':
-        return 'text-red-400';
+        return 'text-red-600';
       default:
-        return 'text-yellow-400';
+        return 'text-gray-600';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-8">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-2xl font-bold text-black">SynapseTrade AI™</span>
+              </div>
+              
+              <nav className="hidden md:flex items-center space-x-6">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="text-gray-500 hover:text-black transition-colors"
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => navigate('/market-analysis')}
+                  className="text-black font-medium border-b-2 border-black pb-1"
+                >
+                  Analysis
+                </button>
+                <button className="text-gray-500 hover:text-black transition-colors">
+                  Strategies
+                </button>
+                <button className="text-gray-500 hover:text-black transition-colors">
+                  Portfolio
+                </button>
+              </nav>
             </div>
-            <h1 className="text-4xl font-bold text-white">SynapseTrade AI™</h1>
+            
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center space-x-2 text-gray-500 hover:text-black transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Back to Dashboard</span>
+              </button>
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">AI Market Analysis</h2>
-          <p className="text-gray-300">Advanced market intelligence powered by multi-AI systems</p>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Header Section */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-black mb-2">Market Analysis</h1>
+          <p className="text-gray-600">Advanced AI-powered market intelligence</p>
         </div>
 
-        {/* AI Status Panel */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
-          <h2 className="text-xl font-bold text-white mb-4">AI Systems Status</h2>
+        {/* AI Status Bar */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-8">
+          <h2 className="text-lg font-bold text-black mb-4">AI Systems Status</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {aiStatus && Object.entries(aiStatus).map(([provider, status]) => (
-              <div key={provider} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+              <div key={provider} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   {getAIStatusIcon(status.status)}
                   <div>
-                    <p className="text-white font-medium capitalize">{provider}</p>
-                    <p className="text-gray-300 text-sm">{status.model}</p>
+                    <div className="font-medium text-black capitalize">{provider}</div>
+                    <div className="text-gray-500 text-sm">{status.model}</div>
                   </div>
                 </div>
-                <span className={`text-sm px-2 py-1 rounded ${
-                  status.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                <div className={`text-xs px-2 py-1 rounded-full ${
+                  status.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
                 }`}>
                   {status.status}
-                </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Symbol Selection */}
           <div className="lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
-              <h2 className="text-xl font-bold text-white mb-4">Select Symbol</h2>
-              <div className="space-y-3">
+            <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+              <h2 className="text-lg font-bold text-black mb-4">Select Symbol</h2>
+              <div className="space-y-2">
                 {symbols.map((item) => (
                   <button
                     key={item.symbol}
                     onClick={() => setSelectedSymbol(item.symbol)}
                     className={`w-full p-3 rounded-lg text-left transition-colors ${
                       selectedSymbol === item.symbol
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        ? 'bg-black text-white'
+                        : 'bg-gray-50 text-black hover:bg-gray-100'
                     }`}
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-medium">{item.symbol}</p>
-                        <p className="text-sm opacity-75">{item.name}</p>
+                        <div className="font-medium">{item.symbol}</div>
+                        <div className="text-sm opacity-75">{item.name}</div>
                       </div>
-                      <span className="text-xs px-2 py-1 bg-white/20 rounded">
+                      <div className="text-xs px-2 py-1 bg-white/20 rounded uppercase">
                         {item.type}
-                      </span>
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -190,14 +234,14 @@ const MarketAnalysis = () => {
             </div>
 
             {/* Trending Symbols */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Trending Crypto</h2>
+            <div className="bg-white border border-gray-200 rounded-xl p-6">
+              <h2 className="text-lg font-bold text-black mb-4">Trending Crypto</h2>
               <div className="space-y-2">
                 {trendingSymbols.map((symbol) => (
                   <button
                     key={symbol}
                     onClick={() => setSelectedSymbol(symbol)}
-                    className="w-full p-2 text-left text-gray-300 hover:bg-white/5 rounded-lg transition-colors"
+                    className="w-full p-2 text-left text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
                   >
                     {symbol}
                   </button>
@@ -207,15 +251,15 @@ const MarketAnalysis = () => {
           </div>
 
           {/* Market Data */}
-          <div className="lg:col-span-2">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">Market Data - {selectedSymbol}</h2>
-                <div className="flex space-x-2">
+          <div className="lg:col-span-3">
+            <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-black">Market Data • {selectedSymbol}</h2>
+                <div className="flex space-x-3">
                   <button
                     onClick={fetchMarketData}
                     disabled={loading}
-                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="flex items-center space-x-2 border border-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
                     <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     <span>Refresh</span>
@@ -223,7 +267,7 @@ const MarketAnalysis = () => {
                   <button
                     onClick={runAIAnalysis}
                     disabled={analysisLoading || !marketData}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50"
+                    className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
                   >
                     <Brain className={`w-4 h-4 ${analysisLoading ? 'animate-spin' : ''}`} />
                     <span>AI Analysis</span>
@@ -233,65 +277,65 @@ const MarketAnalysis = () => {
 
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : marketData ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                      <span className="text-gray-300">Current Price</span>
-                      <span className="text-white font-bold text-lg">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <span className="text-gray-600">Current Price</span>
+                      <span className="text-black font-bold text-lg">
                         ${marketData.data.current_price.toLocaleString()}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                      <span className="text-gray-300">24h Change</span>
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <span className="text-gray-600">24h Change</span>
                       <span className={`font-bold ${
-                        marketData.data.price_change_percent_24h >= 0 ? 'text-green-400' : 'text-red-400'
+                        marketData.data.price_change_percent_24h >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {marketData.data.price_change_percent_24h >= 0 ? '+' : ''}
                         {marketData.data.price_change_percent_24h.toFixed(2)}%
                       </span>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                      <span className="text-gray-300">24h Volume</span>
-                      <span className="text-white font-bold">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <span className="text-gray-600">24h Volume</span>
+                      <span className="text-black font-bold">
                         ${marketData.data.volume_24h.toLocaleString()}
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="p-4 bg-white/5 rounded-lg">
-                      <h3 className="text-white font-bold mb-2">Technical Indicators</h3>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h3 className="text-black font-bold mb-3">Technical Indicators</h3>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-gray-300">RSI</span>
-                          <span className="text-white">{marketData.data.technical_indicators?.rsi || 'N/A'}</span>
+                          <span className="text-gray-600">RSI</span>
+                          <span className="text-black font-medium">{marketData.data.technical_indicators?.rsi || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-300">SMA 20</span>
-                          <span className="text-white">{marketData.data.technical_indicators?.sma_20 || 'N/A'}</span>
+                          <span className="text-gray-600">SMA 20</span>
+                          <span className="text-black font-medium">{marketData.data.technical_indicators?.sma_20 || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-300">Volatility</span>
-                          <span className="text-white">{marketData.data.technical_indicators?.volatility || 'N/A'}</span>
+                          <span className="text-gray-600">Volatility</span>
+                          <span className="text-black font-medium">{marketData.data.technical_indicators?.volatility || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-white/5 rounded-lg">
-                      <h3 className="text-white font-bold mb-2">Market Sentiment</h3>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h3 className="text-black font-bold mb-3">Market Sentiment</h3>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-gray-300">Overall</span>
+                          <span className="text-gray-600">Overall</span>
                           <span className={`font-bold capitalize ${getSentimentColor(marketData.data.market_sentiment?.overall_sentiment)}`}>
                             {marketData.data.market_sentiment?.overall_sentiment || 'Neutral'}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-300">Fear & Greed</span>
-                          <span className="text-white">{marketData.data.market_sentiment?.fear_greed_index || 'N/A'}</span>
+                          <span className="text-gray-600">Fear & Greed</span>
+                          <span className="text-black font-medium">{marketData.data.market_sentiment?.fear_greed_index || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
@@ -299,42 +343,45 @@ const MarketAnalysis = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-gray-400">No market data available</p>
+                  <p className="text-gray-500">No market data available</p>
                 </div>
               )}
             </div>
 
             {/* AI Analysis Results */}
             {aiAnalysis && (
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                <h2 className="text-xl font-bold text-white mb-4">AI Analysis Results</h2>
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h2 className="text-lg font-bold text-black mb-6">AI Analysis Results</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Market Analysis */}
                   {aiAnalysis.market_analysis && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                        <TrendingUp className="w-5 h-5" />
+                      <h3 className="text-base font-bold text-black flex items-center space-x-2">
+                        <TrendingUp className="w-4 h-4" />
                         <span>Market Analysis</span>
                       </h3>
                       <div className="space-y-3">
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Sentiment</p>
-                          <p className={`font-bold capitalize ${getSentimentColor(aiAnalysis.market_analysis.sentiment)}`}>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-1">Sentiment</div>
+                          <div className={`font-bold capitalize ${getSentimentColor(aiAnalysis.market_analysis.sentiment)}`}>
                             {aiAnalysis.market_analysis.sentiment}
-                          </p>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Confidence</p>
-                          <p className="text-white font-bold">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-1">Confidence</div>
+                          <div className="text-black font-bold">
                             {(aiAnalysis.market_analysis.confidence * 100).toFixed(1)}%
-                          </p>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Key Insights</p>
-                          <ul className="text-white text-sm space-y-1">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-2">Key Insights</div>
+                          <ul className="text-black text-sm space-y-1">
                             {aiAnalysis.market_analysis.key_insights.map((insight, index) => (
-                              <li key={index}>• {insight}</li>
+                              <li key={index} className="flex items-start space-x-2">
+                                <span className="text-gray-400 mt-1">•</span>
+                                <span>{insight}</span>
+                              </li>
                             ))}
                           </ul>
                         </div>
@@ -345,32 +392,35 @@ const MarketAnalysis = () => {
                   {/* Risk Assessment */}
                   {aiAnalysis.risk_assessment && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                        <AlertTriangle className="w-5 h-5" />
+                      <h3 className="text-base font-bold text-black flex items-center space-x-2">
+                        <Shield className="w-4 h-4" />
                         <span>Risk Assessment</span>
                       </h3>
                       <div className="space-y-3">
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Risk Level</p>
-                          <p className={`font-bold capitalize ${
-                            aiAnalysis.risk_assessment.risk_level === 'high' ? 'text-red-400' :
-                            aiAnalysis.risk_assessment.risk_level === 'medium' ? 'text-yellow-400' :
-                            'text-green-400'
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-1">Risk Level</div>
+                          <div className={`font-bold capitalize ${
+                            aiAnalysis.risk_assessment.risk_level === 'high' ? 'text-red-600' :
+                            aiAnalysis.risk_assessment.risk_level === 'medium' ? 'text-yellow-600' :
+                            'text-green-600'
                           }`}>
                             {aiAnalysis.risk_assessment.risk_level}
-                          </p>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Risk Score</p>
-                          <p className="text-white font-bold">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-1">Risk Score</div>
+                          <div className="text-black font-bold">
                             {aiAnalysis.risk_assessment.risk_score.toFixed(1)}/100
-                          </p>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Risk Factors</p>
-                          <ul className="text-white text-sm space-y-1">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-2">Risk Factors</div>
+                          <ul className="text-black text-sm space-y-1">
                             {aiAnalysis.risk_assessment.risk_factors.map((factor, index) => (
-                              <li key={index}>• {factor}</li>
+                              <li key={index} className="flex items-start space-x-2">
+                                <span className="text-gray-400 mt-1">•</span>
+                                <span>{factor}</span>
+                              </li>
                             ))}
                           </ul>
                         </div>
@@ -381,34 +431,37 @@ const MarketAnalysis = () => {
                   {/* Trading Strategy */}
                   {aiAnalysis.trading_strategy && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                        <Zap className="w-5 h-5" />
+                      <h3 className="text-base font-bold text-black flex items-center space-x-2">
+                        <Activity className="w-4 h-4" />
                         <span>Trading Strategy</span>
                       </h3>
                       <div className="space-y-3">
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Strategy</p>
-                          <p className="text-white font-bold">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-1">Strategy</div>
+                          <div className="text-black font-bold">
                             {aiAnalysis.trading_strategy.strategy_name}
-                          </p>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Type</p>
-                          <p className="text-white font-bold capitalize">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-1">Type</div>
+                          <div className="text-black font-bold capitalize">
                             {aiAnalysis.trading_strategy.strategy_type}
-                          </p>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Expected Return</p>
-                          <p className="text-green-400 font-bold">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-1">Expected Return</div>
+                          <div className="text-green-600 font-bold">
                             {(aiAnalysis.trading_strategy.expected_return * 100).toFixed(1)}%
-                          </p>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white/5 rounded-lg">
-                          <p className="text-gray-300 text-sm">Entry Signals</p>
-                          <ul className="text-white text-sm space-y-1">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-gray-600 text-sm mb-2">Entry Signals</div>
+                          <ul className="text-black text-sm space-y-1">
                             {aiAnalysis.trading_strategy.entry_signals.map((signal, index) => (
-                              <li key={index}>• {signal}</li>
+                              <li key={index} className="flex items-start space-x-2">
+                                <span className="text-gray-400 mt-1">•</span>
+                                <span>{signal}</span>
+                              </li>
                             ))}
                           </ul>
                         </div>
@@ -420,7 +473,7 @@ const MarketAnalysis = () => {
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
