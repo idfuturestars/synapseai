@@ -211,6 +211,9 @@ async def register_user(user: UserCreate):
             email=user.email
         )
         
+    except HTTPException as he:
+        # Re-raise HTTP exceptions as-is
+        raise he
     except Exception as e:
         logger.error(f"Registration failed: {str(e)}")
         logger.error(f"Registration error type: {type(e)}")
